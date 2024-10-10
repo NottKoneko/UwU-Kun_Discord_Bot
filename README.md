@@ -4,7 +4,7 @@ UwU-Kun is a fun and customizable Discord bot that includes AI-based features, l
 
 ## Features
 - **AI Integration**: Chat with AI-based responses.
-- **Logging**: Keep track of important events in your server.
+- **Logging**: Logs every message sent in channels and logs Audit Log.
 - **Custom Commands**: Easily add and manage commands.
 - **Moderation**: (More commands coming soon!)
 
