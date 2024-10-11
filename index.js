@@ -1,6 +1,7 @@
 require('dotenv/config');
 const fs = require('node:fs');
 const path = require('node:path');
+const { handleJoinDM } = require('./joinDm');
 const { OpenAI } = require('openai');
 const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
@@ -38,6 +39,12 @@ client.commands = new Collection();
 
 // Load all commands from the commands folder
 loadCommands(client);
+
+// Listen for when a new member joins the guild
+client.on('guildMemberAdd', async (member) => {
+    // Call the function to handle sending the DM
+    await handleJoinDM(member);
+});
 
 // Handle interaction create (slash commands)
 client.on('interactionCreate', async (interaction) => {
