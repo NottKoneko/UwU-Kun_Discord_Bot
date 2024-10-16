@@ -5,6 +5,7 @@ const { handleJoinDM } = require('./joinDm');
 const { OpenAI } = require('openai');
 const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
+const { getGuildSettings } = require('./DataBaseInit'); 
 const { loadCommands } = require('./commandHandler');
 const {
   Client,
@@ -64,10 +65,21 @@ client.on('interactionCreate', async (interaction) => {
 
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
+    
+    // Loop through all guilds the bot is in to initialize settings
+    client.guilds.cache.forEach(async (guild) => {
+        await getGuildSettings(guild.id);
+    });
+
     await handleAuditLogLogging(client);
 });
 
-
+client.on('guildCreate', async (guild) => {
+    console.log(`Joined new guild: ${guild.name}`);
+    
+    // Initialize the database for the new guild
+    await getGuildSettings(guild.id);
+});
 
 
 
