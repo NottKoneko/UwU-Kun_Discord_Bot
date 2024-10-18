@@ -4,7 +4,7 @@ const supabaseUrl = 'https://cslrxlgzmosivfgvzhmh.supabase.co'
 const supabaseSRKey = process.env.SERVICE_ROLE_KEY
 const supabase = createClient(supabaseUrl, supabaseSRKey)
 
-async function getGuildSettings(guildId) {
+function getGuildSettings(guildId) {
     const { data, error } = await supabase
       .from('guild_settings')
       .select('*')
@@ -35,5 +35,5 @@ async function getGuildSettings(guildId) {
     return data[0];
 }
 
-// Export the functions so they can be imported elsewhere
-export { getGuildSettings, createDefaultGuildSettings };
+// Export an object containing both functions as a default export
+module.exports = { getGuildSettings, createDefaultGuildSettings };
