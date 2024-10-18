@@ -8,7 +8,7 @@ const { handleJoinDM } = require('./joinDm');
 const { OpenAI } = require('openai');
 const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
-const { getGuildSettings } = require('./DataBaseInit'); 
+const { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData } = require('./DataBaseInit'); 
 const { loadCommands } = require('./commandHandler');
 
 // Import Discord.js classes and constants
@@ -62,6 +62,34 @@ client.once('ready', async () => {
 client.on('guildMemberAdd', async (member) => {
     // Handle sending a welcome DM to the new member
     await handleJoinDM(member);
+
+    // Fetch member roles and admin roles for the guild
+    const guildData = await getGuildData(member.guild.id, member.id);
+
+    // Log or process the data
+    console.log('Member Roles:', guildData.memberRoles);
+    console.log('Admin Roles:', guildData.adminRoles);
+
+    // Now let's insert or update the data in the `guild_members` table
+    const { data, error } = await supabase
+      .from('guild_members')
+      .upsert({
+        guild_id: member.guild.id,     // Guild ID
+        member_id: member.id,          // Member ID
+        role: guildData.memberRoles,   // Member Roles in the guild
+      }, { onConflict: ['guild_id', 'member_id'] });  // Ensures no duplicate entries
+
+    if (error) {
+      console.error('Error inserting/updating member roles:', error);
+    } else {
+      console.log('Successfully inserted/updated member roles.');
+    }
+
+    // Additional actions based on roles (assigning default role, welcome message, etc.)
+    // Example: If the user has an admin role, greet them with a special message
+    if (guildData.memberRoles.includes('admin')) {
+      await member.send('Welcome, Admin!');
+    }
 });
 
 // Event: Handle interactions (slash commands)
@@ -90,7 +118,16 @@ client.on('guildCreate', async (guild) => {
     
     // Initialize the database for the new guild
     await getGuildSettings(guild.id);
+
+    // Fetch admin roles for the new guild
+    const adminRoles = await getAdminRoles(guild.id);
+
+    // Log or process the admin roles
+    console.log('Admin Roles:', adminRoles);
+
+    // Perform actions like notifying the admins or logging admin roles
 });
+
 
 
 
