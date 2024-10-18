@@ -10,6 +10,12 @@ const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
 const { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData } = require('./DataBaseInit'); 
 const { loadCommands } = require('./commandHandler');
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Import Discord.js classes and constants
 const {
@@ -51,50 +57,55 @@ client.once('ready', async () => {
     // Initialize an object to store roles data
     const rolesCache = {};
 
-    // Loop through each guild the bot is part of
-    client.guilds.cache.forEach(async (guild) => {
-        // Fetch settings for each guild
-        await getGuildSettings(guild.id);
+    try {
+        // Loop through each guild the bot is part of
+        for (const guild of client.guilds.cache.values()) {
+            // Fetch settings for each guild
+            await getGuildSettings(guild.id);
 
-        // Fetch all members of the guild
-        await guild.members.fetch(); // This ensures the members cache is populated
-        
-        // Loop through each member in the guild
-        guild.members.cache.forEach(async (member) => {
-            // Fetch member roles and admin roles for the guild
-            const guildData = await getGuildData(guild.id, member.id);
+            // Fetch all members of the guild
+            await guild.members.fetch(); // This ensures the members cache is populated
+            
+            // Loop through each member in the guild
+            for (const member of guild.members.cache.values()) {
+                // Fetch member roles and admin roles for the guild
+                const guildData = await getGuildData(guild.id, member.id);
 
-            // Store the data in memory or process it as needed
-            rolesCache[guild.id] = rolesCache[guild.id] || {};
-            rolesCache[guild.id][member.id] = {
-                memberRoles: guildData.memberRoles,
-                adminRoles: guildData.adminRoles
-            };
+                // Store the data in memory or process it as needed
+                rolesCache[guild.id] = rolesCache[guild.id] || {};
+                rolesCache[guild.id][member.id] = {
+                    memberRoles: guildData.memberRoles,
+                    adminRoles: guildData.adminRoles
+                };
 
-            // Log or process the data
-            console.log(`Roles for ${member.displayName} in ${guild.name}:`, guildData.memberRoles);
-            console.log(`Admin roles for ${guild.name}:`, guildData.adminRoles);
+                // Log or process the data
+                console.log(`Roles for ${member.displayName} in ${guild.name}:`, guildData.memberRoles);
+                console.log(`Admin roles for ${guild.name}:`, guildData.adminRoles);
 
-            // Optionally, insert/update this data in your database (Supabase)
-            const { data, error } = await supabase
-              .from('guild_members')
-              .upsert({
-                guild_id: guild.id,         // Guild ID
-                member_id: member.id,       // Member ID
-                role: guildData.memberRoles // Member roles in the guild
-              }, { onConflict: ['guild_id', 'member_id'] });
+                // Insert or update the data in the database
+                const { data, error } = await supabase
+                  .from('guild_members')
+                  .upsert({
+                    guild_id: guild.id,         // Guild ID
+                    member_id: member.id,       // Member ID
+                    role: guildData.memberRoles // Member roles in the guild
+                  }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
 
-            if (error) {
-              console.error('Error inserting/updating member roles:', error);
-            } else {
-              console.log('Successfully inserted/updated member roles.');
+                if (error) {
+                  console.error('Error inserting/updating member roles:', error);
+                } else {
+                  console.log('Successfully inserted/updated member roles.');
+                }
             }
-        });
-    });
+        }
+    } catch (error) {
+        console.error('Error during startup data fetch:', error);
+    }
 
     // Start logging audit logs after data has been fetched
     await handleAuditLogLogging(client);
 });
+
 
 // Event: New member joins a guild
 client.on('guildMemberAdd', async (member) => {
