@@ -45,16 +45,54 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
-// Event: Bot is ready and logged in
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
     
-    // Initialize settings for all guilds the bot is in
+    // Initialize an object to store roles data
+    const rolesCache = {};
+
+    // Loop through each guild the bot is part of
     client.guilds.cache.forEach(async (guild) => {
+        // Fetch settings for each guild
         await getGuildSettings(guild.id);
+
+        // Fetch all members of the guild
+        await guild.members.fetch(); // This ensures the members cache is populated
+        
+        // Loop through each member in the guild
+        guild.members.cache.forEach(async (member) => {
+            // Fetch member roles and admin roles for the guild
+            const guildData = await getGuildData(guild.id, member.id);
+
+            // Store the data in memory or process it as needed
+            rolesCache[guild.id] = rolesCache[guild.id] || {};
+            rolesCache[guild.id][member.id] = {
+                memberRoles: guildData.memberRoles,
+                adminRoles: guildData.adminRoles
+            };
+
+            // Log or process the data
+            console.log(`Roles for ${member.displayName} in ${guild.name}:`, guildData.memberRoles);
+            console.log(`Admin roles for ${guild.name}:`, guildData.adminRoles);
+
+            // Optionally, insert/update this data in your database (Supabase)
+            const { data, error } = await supabase
+              .from('guild_members')
+              .upsert({
+                guild_id: guild.id,         // Guild ID
+                member_id: member.id,       // Member ID
+                role: guildData.memberRoles // Member roles in the guild
+              }, { onConflict: ['guild_id', 'member_id'] });
+
+            if (error) {
+              console.error('Error inserting/updating member roles:', error);
+            } else {
+              console.log('Successfully inserted/updated member roles.');
+            }
+        });
     });
 
-    // Start logging audit logs
+    // Start logging audit logs after data has been fetched
     await handleAuditLogLogging(client);
 });
 
