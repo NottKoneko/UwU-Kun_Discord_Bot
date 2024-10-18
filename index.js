@@ -1,4 +1,7 @@
+// Load environment variables from the .env file
 require('dotenv/config');
+
+// Import necessary modules and files
 const fs = require('node:fs');
 const path = require('node:path');
 const { handleJoinDM } = require('./joinDm');
@@ -7,6 +10,8 @@ const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
 const { getGuildSettings } = require('./DataBaseInit'); 
 const { loadCommands } = require('./commandHandler');
+
+// Import Discord.js classes and constants
 const {
   Client,
   IntentsBitField,
@@ -17,14 +22,13 @@ const {
   GatewayIntentBits,
 } = require('discord.js');
 
-
 // Initialize the OpenAI API
 const openai = new OpenAI({
     apiKey: process.env.CHAT_OPENAI_API_KEY,
     assistant_name: "Neko-chan"
 });
 
-// Initialize the Discord client
+// Initialize the Discord client with necessary intents
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -41,20 +45,37 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
-// Listen for when a new member joins the guild
+// Event: Bot is ready and logged in
+client.once('ready', async () => {
+    console.log('Bot is online and ready!');
+    
+    // Initialize settings for all guilds the bot is in
+    client.guilds.cache.forEach(async (guild) => {
+        await getGuildSettings(guild.id);
+    });
+
+    // Start logging audit logs
+    await handleAuditLogLogging(client);
+});
+
+// Event: New member joins a guild
 client.on('guildMemberAdd', async (member) => {
-    // Call the function to handle sending the DM
+    // Handle sending a welcome DM to the new member
     await handleJoinDM(member);
 });
 
-// Handle interaction create (slash commands)
+// Event: Handle interactions (slash commands)
 client.on('interactionCreate', async (interaction) => {
+    // Only process slash commands
     if (!interaction.isCommand()) return;
 
+    // Get the command being executed
     const command = client.commands.get(interaction.commandName);
 
+    // If command does not exist, return
     if (!command) return;
 
+    // Execute the command and handle errors
     try {
         await command.execute(interaction);
     } catch (error) {
@@ -63,17 +84,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
-client.once('ready', async () => {
-    console.log('Bot is online and ready!');
-    
-    // Loop through all guilds the bot is in to initialize settings
-    client.guilds.cache.forEach(async (guild) => {
-        await getGuildSettings(guild.id);
-    });
-
-    await handleAuditLogLogging(client);
-});
-
+// Event: Bot joins a new guild
 client.on('guildCreate', async (guild) => {
     console.log(`Joined new guild: ${guild.name}`);
     
@@ -81,6 +92,9 @@ client.on('guildCreate', async (guild) => {
     await getGuildSettings(guild.id);
 });
 
+
+
+// ------------The bot is logged in and ready to operate------------
 
 
 
@@ -91,64 +105,8 @@ client.on('messageCreate', async (message) => {
     // Handle logging and conversation processing
     await handleMessageLogging(client, message);
 
-
-
-/*
-    // Ignore messages from bots
-    if (message.author.bot) return;
-    
-    // Find the log server by ID
-    const logServer = client.guilds.cache.get(process.env.LOG_SERVER_ID);
-
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(`Error executing command ${interaction.commandName}:`, error);
-        await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
-    
-
-
-
-    // If the log server exists, find or create a channel for the current guild
-    if (logServer) {
-        // Inside the 'messageCreate' event listener
-        try {
-            // Create a unique channel name using the guild name and message timestamp
-            const channelName = `msg-logs-${message.guild.id}`;
-            
-            // Sanitize the channel name to remove invalid characters and ensure it does not exceed the maximum length
-            const sanitizedChannelName = channelName.slice(0, 100).replace(/[^a-zA-Z0-9-_]/g, '');
-
-            // Log the sanitized channel name for debugging
-            console.log('Sanitized Channel Name:', sanitizedChannelName);
-                // Log the length of the sanitized channel name
-            console.log('Length of Sanitized Channel Name:', sanitizedChannelName.length);
-
-
-            // Find the existing channel corresponding to the current guild
-            let logChannel = logServer.channels.cache.find(
-                channel => channel.type === ChannelType.GuildText && channel.name === sanitizedChannelName);
-
-            // If the channel doesn't exist, create a new one
-            if (!logChannel) {
-                logChannel = await logServer.channels.create({
-                    name: sanitizedChannelName,
-                    type: 0,
-                });
-            }
-
-            // Send the message log to the log channel
-            logChannel.send(`[${new Date().toLocaleString()}] Author: ${message.author.tag}, Content: ${message.content}`);
-        } catch (error) {
-            console.error(`Error creating or finding log channel for server ${logServer.name} (${logServer.id}): ${error}`);
-        }
-*/
         // Check if the message content starts with the user ID
         if (!message.content.startsWith(process.env.USER_ID)) return;
-     
-
-
-
 
 
         // Build conversation log with system message
