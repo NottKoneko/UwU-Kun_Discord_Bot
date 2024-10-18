@@ -34,3 +34,6 @@ async function getGuildSettings(guildId) {
   
     return data[0];
 }
+
+// Export the functions so they can be imported elsewhere
+export { getGuildSettings, createDefaultGuildSettings };
