@@ -74,19 +74,29 @@ async function getGuildData(guildId, memberId) {
   try {
     // Fetch member roles in the guild
     const memberRoles = await getMemberRoles(guildId, memberId);
-    
+    console.log(`Fetched member roles for ${memberId} in guild ${guildId}:`, memberRoles); // Debugging
+
     // Fetch admin roles for the guild
     const adminRoles = await getAdminRoles(guildId);
+    console.log(`Fetched admin roles for guild ${guildId}:`, adminRoles); // Debugging
+
+    // Safely handle cases where memberRoles or adminRoles might be empty or undefined
+    const memberRolesArray = (Array.isArray(memberRoles) && memberRoles.length > 0) ? memberRoles[0].role : [];
+    const adminRolesArray = Array.isArray(adminRoles) ? adminRoles : [];
 
     return {
-      memberRoles: memberRoles.length > 0 ? memberRoles[0].role : [],
-      adminRoles
+      memberRoles: memberRolesArray,
+      adminRoles: adminRolesArray
     };
   } catch (error) {
     console.error('Error fetching guild data:', error);
-    return null;
+    return {
+      memberRoles: [],
+      adminRoles: []
+    }; // Always return arrays to prevent issues elsewhere in your bot
   }
 }
+
 /*
 // Example: Fetch guild data for a specific member in a guild
 (async () => {
