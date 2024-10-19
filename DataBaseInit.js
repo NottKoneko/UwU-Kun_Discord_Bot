@@ -54,20 +54,16 @@ async function getMemberRoles(guildId, memberId) {
 }
 
 // Fetch all roles with admin ability from the guild_settings table
-async function getAdminRoles(guildId) {
-  const { data, error } = await supabase
-    .from('guild_settings')
-    .select('admin_role')
-    .eq('guild_id', guildId)
-    .single();
+async function getAdminRoles(guild) {
+    // Fetch all the roles in the guild
+    const rolesWithAdmin = guild.roles.cache.filter(role => 
+      role.permissions.has(PermissionsBitField.Flags.Administrator)
+  );
 
-  if (error) {
-    console.error('Error fetching admin roles:', error);
-    return null;
-  }
-
-  return data?.admin_role || [];
+  // Return an array of role names
+  return rolesWithAdmin.map(role => role.name);
 }
+
 
 // Function to handle getting both the member roles and admin roles together
 async function getGuildData(guildId, memberId) {
