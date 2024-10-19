@@ -69,7 +69,7 @@ client.once('ready', async () => {
             }
 
             // Fetch all members of the guild
-            await guild.members.fetch(); // This ensures the members cache is populated
+            await guild.members.fetch(); // Ensures the members cache is populated
 
             // Loop through each member in the guild
             for (const member of guild.members.cache.values()) {
@@ -91,22 +91,22 @@ client.once('ready', async () => {
                 console.log(`Roles for ${member.displayName} in ${guild.name}:`, memberRolesArray);
                 console.log(`Admin roles for ${guild.name}:`, adminRolesArray);
 
-                // Insert or update the data in the database
-                const { data, error } = await supabase
+                // Insert or update the member roles in the database
+                const { data: memberData, error: memberError } = await supabase
                     .from('guild_members')
-                    .upsert({ 
+                    .upsert({
                         guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
                         member_id: member.id,        // Member ID
                         role: memberRolesArray       // Member roles in the guild (ensure it's an array)
                     }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
 
-                if (error) {
-                    console.error('Error inserting/updating member roles:', error);
+                if (memberError) {
+                    console.error('Error inserting/updating member roles:', memberError);
                 } else {
                     console.log('Successfully inserted/updated member roles.');
                 }
 
-                // Upsert 'admin_role' into 'guild_settings'
+                // Upsert admin roles into 'guild_settings'
                 const { data: settingsData, error: settingsError } = await supabase
                     .from('guild_settings')
                     .upsert({
@@ -128,6 +128,7 @@ client.once('ready', async () => {
     // Start logging audit logs after data has been fetched
     await handleAuditLogLogging(client);
 });
+
 
 
 
