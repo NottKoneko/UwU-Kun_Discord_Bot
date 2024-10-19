@@ -135,6 +135,9 @@ client.once('ready', async () => {
 client.on('guildMemberAdd', async (member) => {
     // Handle sending a welcome DM to the new member
     await handleJoinDM(member);
+    
+    // Fetch settings for each guild, assuming this returns the primary key of guild_settings
+    const guildSettings = await getGuildSettings(guild.id);
 
     // Fetch member roles and admin roles for the guild
     const guildData = await getGuildData(member.guild.id, member.id);
@@ -147,7 +150,7 @@ client.on('guildMemberAdd', async (member) => {
     const { data, error } = await supabase
       .from('guild_members')
       .upsert({
-        guild_id: member.guild.id,     // Guild ID
+        guild_id: guildSettings.id,     // Guild ID
         member_id: member.id,          // Member ID
         role: guildData.memberRoles,   // Member Roles in the guild
       }, { onConflict: ['guild_id', 'member_id'] });  // Ensures no duplicate entries
