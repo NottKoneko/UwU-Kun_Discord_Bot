@@ -3,6 +3,7 @@ const fs = require('fs');
 const supabaseUrl = 'https://cslrxlgzmosivfgvzhmh.supabase.co';
 const supabaseSRKey = process.env.SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseSRKey);
+const { PermissionsBitField } = require('discord.js');
 
 // Fetch guild settings when bot starts or joins a guild
 async function getGuildSettings(guildId) {
@@ -53,16 +54,21 @@ async function getMemberRoles(guildId, memberId) {
   return data;
 }
 
-// Fetch all roles with admin ability from the guild_settings table
-async function getAdminRoles(guild) {
-    // Fetch all the roles in the guild
-    const rolesWithAdmin = guild.roles.cache.filter(role => 
-      role.permissions.has(PermissionsBitField.Flags.Administrator)
-  );
 
-  // Return an array of role names
-  return rolesWithAdmin.map(role => role.name);
+// Function to get admin roles
+async function getAdminRoles(guild) {
+    // Fetch roles from the API to ensure the data is available
+    const roles = await guild.roles.fetch();
+
+    // Filter roles with the Administrator permission
+    const rolesWithAdmin = roles.filter(role =>
+        role.permissions.has(PermissionsBitField.Flags.Administrator)
+    );
+
+    // Return an array of role names
+    return rolesWithAdmin.map(role => role.name);
 }
+
 
 
 // Function to handle getting both the member roles and admin roles together
