@@ -55,18 +55,31 @@ async function getMemberRoles(guildId, memberId) {
 }
 
 
-// Function to get admin roles
 async function getAdminRoles(guild) {
-    // Fetch roles from the API to ensure the data is available
-    const roles = await guild.roles.fetch();
+  // Ensure the guild is valid
+  if (!guild) {
+      throw new Error('Guild object is undefined or invalid');
+  }
 
-    // Filter roles with the Administrator permission
-    const rolesWithAdmin = roles.filter(role =>
-        role.permissions.has(PermissionsBitField.Flags.Administrator)
-    );
+  // Ensure the guild roles exist
+  if (!guild.roles) {
+      throw new Error('Guild roles are undefined');
+  }
 
-    // Return an array of role names
-    return rolesWithAdmin.map(role => role.name);
+  // Fetch roles from the API
+  const roles = await guild.roles.fetch();
+
+  if (!roles) {
+      throw new Error('Failed to fetch roles from the guild');
+  }
+
+  // Filter roles with the Administrator permission
+  const rolesWithAdmin = roles.filter(role =>
+      role.permissions.has(PermissionsBitField.Flags.Administrator)
+  );
+
+  // Return an array of role names
+  return rolesWithAdmin.map(role => role.name);
 }
 
 
