@@ -76,24 +76,29 @@ client.once('ready', async () => {
                 // Fetch member roles and admin roles for the guild
                 const guildData = await getGuildData(guild.id, member.id);
 
+                // Ensure memberRoles and adminRoles are arrays
+                const memberRolesArray = guildData.memberRoles || [];
+                const adminRolesArray = guildData.adminRoles || [];
+
                 // Store the data in memory or process it as needed
                 rolesCache[guild.id] = rolesCache[guild.id] || {};
                 rolesCache[guild.id][member.id] = {
-                    memberRoles: guildData.memberRoles,
-                    adminRoles: guildData.adminRoles
+                    memberRoles: memberRolesArray,
+                    adminRoles: adminRolesArray
                 };
 
                 // Log or process the data
-                console.log(`Roles for ${member.displayName} in ${guild.name}:`, guildData.memberRoles);
-                console.log(`Admin roles for ${guild.name}:`, guildData.adminRoles);
-                
+                console.log(`Roles for ${member.displayName} in ${guild.name}:`, memberRolesArray);
+                console.log(`Admin roles for ${guild.name}:`, adminRolesArray);
+
                 // Insert or update the data in the database
                 const { data, error } = await supabase
                   .from('guild_members')
                   .upsert({ 
                     guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
                     member_id: member.id,        // Member ID
-                    role: guildData.memberRoles  // Member roles in the guild
+                    role: memberRolesArray,      // Member roles in the guild (ensure it's an array)
+                    admin_role: adminRolesArray  // Admin roles (ensure it's an array)
                   }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
 
                 if (error) {
@@ -110,6 +115,7 @@ client.once('ready', async () => {
     // Start logging audit logs after data has been fetched
     await handleAuditLogLogging(client);
 });
+
 
 
 // Event: New member joins a guild
