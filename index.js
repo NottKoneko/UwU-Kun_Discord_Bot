@@ -57,7 +57,7 @@ client.once('ready', async () => {
     try {
       // Loop through each guild the bot is part of
       for (const guild of client.guilds.cache.values()) {
-        // Fetch settings for each guild, assuming this returns the primary key of guild_settings
+        // Fetch settings for each guild
         const guildSettings = await getGuildSettings(guild.id);
   
         if (!guildSettings) {
@@ -70,58 +70,54 @@ client.once('ready', async () => {
   
         // Loop through each member in the guild
         for (const member of guild.members.cache.values()) {
-          // Fetch member roles and admin roles for the guild (passing the guild object)
+          // Fetch member roles and admin roles for the guild
           const guildData = await getGuildData(guild, member.id);
   
-          // Ensure that memberRoles and adminRoles are always arrays
           const memberRolesArray = Array.isArray(guildData.memberRoles) ? guildData.memberRoles : [];
           const adminRolesArray = Array.isArray(guildData.adminRoles) ? guildData.adminRoles : [];
   
-          // Store the data in memory or process it as needed
+          // Log or process the data
           console.log(`Roles for ${member.displayName} in ${guild.name}:`, memberRolesArray);
           console.log(`Admin roles for ${guild.name}:`, adminRolesArray);
-
-                // Log or process the data
-                console.log(`Roles for ${member.displayName} in ${guild.name}:`, memberRolesArray);
-                console.log(`Admin roles for ${guild.name}:`, adminRolesArray);
-
-                // Insert or update the member roles in the database
-                const { data: memberData, error: memberError } = await supabase
-                    .from('guild_members')
-                    .upsert({
-                        guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
-                        member_id: member.id,        // Member ID
-                        role: memberRolesArray       // Member roles in the guild (ensure it's an array)
-                    }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
-
-                if (memberError) {
-                    console.error('Error inserting/updating member roles:', memberError);
-                } else {
-                    console.log('Successfully inserted/updated member roles.');
-                }
-
-                // Upsert admin roles into 'guild_settings'
-                const { data: settingsData, error: settingsError } = await supabase
-                    .from('guild_settings')
-                    .upsert({
-                        guild_id: guild.id,         // Assuming 'guild_id' is the unique identifier in 'guild_settings'
-                        admin_role: adminRolesArray // Use the appropriate data (array of role IDs)
-                    }, { onConflict: 'guild_id' });
-
-                if (settingsError) {
-                    console.error('Error inserting/updating admin role in guild settings:', settingsError);
-                } else {
-                    console.log('Successfully inserted/updated admin role in guild settings.');
-                }
-            }
+  
+          // Insert or update the member roles in the database
+          const { data: memberData, error: memberError } = await supabase
+            .from('guild_members')
+            .upsert({
+              guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
+              member_id: member.id,        // Member ID
+              role: memberRolesArray       // Member roles in the guild (array of roles)
+            }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
+  
+          if (memberError) {
+            console.error('Error inserting/updating member roles:', memberError);
+          } else {
+            console.log('Successfully inserted/updated member roles.');
+          }
+  
+          // Upsert admin roles into 'guild_settings'
+          const { data: settingsData, error: settingsError } = await supabase
+            .from('guild_settings')
+            .upsert({
+              guild_id: guild.id,         // Assuming 'guild_id' is the unique identifier in 'guild_settings'
+              admin_role: adminRolesArray // Admin roles for the guild
+            }, { onConflict: 'guild_id' });
+  
+          if (settingsError) {
+            console.error('Error inserting/updating admin role in guild settings:', settingsError);
+          } else {
+            console.log('Successfully inserted/updated admin role in guild settings.');
+          }
         }
+      }
     } catch (error) {
-        console.error('Error during startup data fetch:', error);
+      console.error('Error during startup data fetch:', error);
     }
-
+  
     // Start logging audit logs after data has been fetched
     await handleAuditLogLogging(client);
-});
+  });
+  
 
 
 
