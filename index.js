@@ -60,8 +60,13 @@ client.once('ready', async () => {
     try {
         // Loop through each guild the bot is part of
         for (const guild of client.guilds.cache.values()) {
-            // Fetch settings for each guild
-            await getGuildSettings(guild.id);
+            // Fetch settings for each guild, assuming this returns the primary key of guild_settings
+            const guildSettings = await getGuildSettings(guild.id);
+
+            if (!guildSettings) {
+                console.error(`No guild settings found for guild: ${guild.name} (${guild.id})`);
+                continue; // Skip to the next guild if settings not found
+            }
 
             // Fetch all members of the guild
             await guild.members.fetch(); // This ensures the members cache is populated
@@ -81,14 +86,14 @@ client.once('ready', async () => {
                 // Log or process the data
                 console.log(`Roles for ${member.displayName} in ${guild.name}:`, guildData.memberRoles);
                 console.log(`Admin roles for ${guild.name}:`, guildData.adminRoles);
-
+                
                 // Insert or update the data in the database
                 const { data, error } = await supabase
                   .from('guild_members')
-                  .upsert({
-                    guild_id: guild.id,         // Guild ID
-                    member_id: member.id,       // Member ID
-                    role: guildData.memberRoles // Member roles in the guild
+                  .upsert({ 
+                    guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
+                    member_id: member.id,        // Member ID
+                    role: guildData.memberRoles  // Member roles in the guild
                   }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
 
                 if (error) {
