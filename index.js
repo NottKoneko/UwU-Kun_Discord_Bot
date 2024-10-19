@@ -93,19 +93,32 @@ client.once('ready', async () => {
 
                 // Insert or update the data in the database
                 const { data, error } = await supabase
-                  .from('guild_members')
-                  .upsert({ 
-                    guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
-                    member_id: member.id,        // Member ID
-                    role: memberRolesArray,      // Member roles in the guild (ensure it's an array)
-                    admin_role: adminRolesArray  // Admin roles (ensure it's an array)
+                    .from('guild_members')
+                    .upsert({ 
+                        guild_id: guildSettings.id,  // Use the primary key from guild_settings as the guild_id
+                        member_id: member.id,        // Member ID
+                        role: memberRolesArray,      // Member roles in the guild (ensure it's an array)
                   }, { onConflict: ['guild_id', 'member_id'] }); // Prevents duplicate entries
 
                 if (error) {
-                  console.error('Error inserting/updating member roles:', error);
+                    console.error('Error inserting/updating member roles:', error);
                 } else {
-                  console.log('Successfully inserted/updated member roles.');
+                    console.log('Successfully inserted/updated member roles.');
                 }
+                // Upsert 'admin_role' into 'guild_settings'
+                const { data: settingsData, error: settingsError } = await supabase
+                    .from('guild_settings')
+                    .upsert({
+                        guild_id: guild.id, // Assuming 'guild_id' is the unique identifier in 'guild_settings'
+                        admin_role: adminRolesArray // Use the appropriate data (likely a single role ID or array)
+                }, { onConflict: 'guild_id' });
+
+                if (settingsError) {
+                    console.error('Error inserting/updating admin role in guild settings:', settingsError);
+                } else {
+                    console.log('Successfully inserted/updated admin role in guild settings.');
+                }
+
             }
         }
     } catch (error) {
