@@ -54,28 +54,22 @@ async function getMemberRoles(guildId, memberId) {
   return data;
 }
 
-
 async function getAdminRoles(guild) {
   // Ensure the guild is valid
   if (!guild) {
-      throw new Error('Guild object is undefined or invalid');
+    throw new Error('Guild object is undefined or invalid');
   }
 
-  // Ensure the guild roles exist
-  if (!guild.roles) {
-      throw new Error('Guild roles are undefined');
-  }
-
-  // Fetch roles from the API
+  // Fetch roles from the API (fetches latest roles from the server)
   const roles = await guild.roles.fetch();
 
   if (!roles) {
-      throw new Error('Failed to fetch roles from the guild');
+    throw new Error('Failed to fetch roles from the guild');
   }
 
   // Filter roles with the Administrator permission
   const rolesWithAdmin = roles.filter(role =>
-      role.permissions.has(PermissionsBitField.Flags.Administrator)
+    role.permissions.has(PermissionsBitField.Flags.Administrator)
   );
 
   // Return an array of role names
@@ -85,15 +79,15 @@ async function getAdminRoles(guild) {
 
 
 // Function to handle getting both the member roles and admin roles together
-async function getGuildData(guildId, memberId) {
+async function getGuildData(guild, memberId) {
   try {
     // Fetch member roles in the guild
-    const memberRoles = await getMemberRoles(guildId, memberId);
-    console.log(`Fetched member roles for ${memberId} in guild ${guildId}:`, memberRoles); // Debugging
+    const memberRoles = await getMemberRoles(guild.id, memberId);
+    console.log(`Fetched member roles for ${memberId} in guild ${guild.id}:`, memberRoles);
 
-    // Fetch admin roles for the guild
-    const adminRoles = await getAdminRoles(guildId);
-    console.log(`Fetched admin roles for guild ${guildId}:`, adminRoles); // Debugging
+    // Fetch admin roles for the guild (passing the actual guild object)
+    const adminRoles = await getAdminRoles(guild);
+    console.log(`Fetched admin roles for guild ${guild.id}:`, adminRoles);
 
     // Safely handle cases where memberRoles or adminRoles might be empty or undefined
     const memberRolesArray = (Array.isArray(memberRoles) && memberRoles.length > 0) ? memberRoles[0].role : [];
@@ -101,13 +95,13 @@ async function getGuildData(guildId, memberId) {
 
     return {
       memberRoles: memberRolesArray,
-      adminRoles: adminRolesArray
+      adminRoles: adminRolesArray,
     };
   } catch (error) {
     console.error('Error fetching guild data:', error);
     return {
       memberRoles: [],
-      adminRoles: []
+      adminRoles: [],
     }; // Always return arrays to prevent issues elsewhere in your bot
   }
 }

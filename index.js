@@ -53,39 +53,33 @@ loadCommands(client);
 
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
-
-    // Initialize an object to store roles data
-    const rolesCache = {};
-
+  
     try {
-        // Loop through each guild the bot is part of
-        for (const guild of client.guilds.cache.values()) {
-            // Fetch settings for each guild, assuming this returns the primary key of guild_settings
-            const guildSettings = await getGuildSettings(guild.id);
-
-            if (!guildSettings) {
-                console.error(`No guild settings found for guild: ${guild.name} (${guild.id})`);
-                continue; // Skip to the next guild if settings not found
-            }
-
-            // Fetch all members of the guild
-            await guild.members.fetch(); // Ensures the members cache is populated
-
-            // Loop through each member in the guild
-            for (const member of guild.members.cache.values()) {
-                // Fetch member roles and admin roles for the guild
-                const guildData = await getGuildData(guild.id, member.id);
-
-                // Ensure that memberRoles and adminRoles are always arrays
-                const memberRolesArray = Array.isArray(guildData.memberRoles) ? guildData.memberRoles : [];
-                const adminRolesArray = Array.isArray(guildData.adminRoles) ? guildData.adminRoles : [];
-
-                // Store the data in memory or process it as needed
-                rolesCache[guild.id] = rolesCache[guild.id] || {};
-                rolesCache[guild.id][member.id] = {
-                    memberRoles: memberRolesArray,
-                    adminRoles: adminRolesArray
-                };
+      // Loop through each guild the bot is part of
+      for (const guild of client.guilds.cache.values()) {
+        // Fetch settings for each guild, assuming this returns the primary key of guild_settings
+        const guildSettings = await getGuildSettings(guild.id);
+  
+        if (!guildSettings) {
+          console.error(`No guild settings found for guild: ${guild.name} (${guild.id})`);
+          continue; // Skip to the next guild if settings not found
+        }
+  
+        // Fetch all members of the guild
+        await guild.members.fetch(); // Ensures the members cache is populated
+  
+        // Loop through each member in the guild
+        for (const member of guild.members.cache.values()) {
+          // Fetch member roles and admin roles for the guild (passing the guild object)
+          const guildData = await getGuildData(guild, member.id);
+  
+          // Ensure that memberRoles and adminRoles are always arrays
+          const memberRolesArray = Array.isArray(guildData.memberRoles) ? guildData.memberRoles : [];
+          const adminRolesArray = Array.isArray(guildData.adminRoles) ? guildData.adminRoles : [];
+  
+          // Store the data in memory or process it as needed
+          console.log(`Roles for ${member.displayName} in ${guild.name}:`, memberRolesArray);
+          console.log(`Admin roles for ${guild.name}:`, adminRolesArray);
 
                 // Log or process the data
                 console.log(`Roles for ${member.displayName} in ${guild.name}:`, memberRolesArray);
