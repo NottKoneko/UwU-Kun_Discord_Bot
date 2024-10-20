@@ -1,11 +1,12 @@
 const ytdl = require('yt-dlp-exec');
+const path = require('path');
 
 // Function to stream audio from a YouTube URL
 function downloadAudio(youtubeUrl) {
   return ytdl(youtubeUrl, {
-    format: 'bestaudio', // Replace 'filter' with 'format' and specify audio only
+    format: 'bestaudio',
+    cookies: path.resolve(__dirname, 'cookies.txt')  // Add path to cookies file
   });
 }
 
 module.exports = { downloadAudio };
-
