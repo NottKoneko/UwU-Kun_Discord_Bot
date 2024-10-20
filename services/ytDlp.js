@@ -4,7 +4,6 @@ const ytdl = require('yt-dlp-exec');
 function downloadAudio(youtubeUrl) {
   return ytdl(youtubeUrl, {
     format: 'bestaudio', // Replace 'filter' with 'format' and specify audio only
-    quality: 'highestaudio'
   });
 }
 
