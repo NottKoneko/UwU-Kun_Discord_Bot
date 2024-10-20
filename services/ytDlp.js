@@ -5,9 +5,9 @@ const path = require('path');
 function downloadAudio(youtubeUrl) {
   return ytdl(youtubeUrl, {
     format: 'bestaudio',
-    cookies: path.resolve(__dirname, 'cookies.txt'),  // Correct path to cookies.txt
-    execPath: path.resolve(__dirname, '../node_modules/yt-dlp-exec/bin/yt-dlp')  // Ensure the correct path to yt-dlp binary
+    cookies: path.resolve(__dirname, 'cookies.txt')  // Correct path to cookies.txt
   });
 }
 
 module.exports = { downloadAudio };
+
