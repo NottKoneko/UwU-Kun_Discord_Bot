@@ -1,19 +1,24 @@
-const fs = require('fs');
 const ytdl = require('yt-dlp-exec');
+const fs = require('fs');
 const path = require('path');
 
 // Function to stream audio from a YouTube URL using cookies
 function downloadAudio(youtubeUrl) {
-  const cookiesPath = '/tmp/cookies.txt';  // Ensure this is the correct path to your writable cookies file
+  const secretCookiesPath = '/etc/secrets/cookies.txt';  // Where your cookies are securely stored
+  const writableCookiesPath = '/tmp/cookies.txt';  // Writable location
 
-  // Debugging: Print a part of the cookies file
-  const cookiesContent = fs.readFileSync(cookiesPath, 'utf8');
-  console.log("Cookies content (first 100 chars):", cookiesContent.substring(0, 100));
+  // Ensure the cookies file is copied before using it
+  if (!fs.existsSync(secretCookiesPath)) {
+    throw new Error('Cookies file not found at the secret path.');
+  }
 
-  // Use the cookies file in yt-dlp
+  // Copy the cookies file to a writable location (e.g., /tmp/)
+  fs.copyFileSync(secretCookiesPath, writableCookiesPath);
+
+  // Now use the copied cookies file in yt-dlp
   return ytdl(youtubeUrl, {
     format: 'bestaudio',
-    cookies: cookiesPath
+    cookies: writableCookiesPath  // Use the writable copy
   });
 }
 
