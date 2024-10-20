@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const SpotifyAPI = require('../services/SpotifyAPI');
 const YouTubeAPI = require('../services/YouTubeAPI');
 const ytDlp = require('../services/ytDlp');
@@ -28,12 +29,36 @@ module.exports = {
         return interaction.reply('You need to be in a voice channel to play music!');
       }
 
-      const connection = await voiceChannel.join();
+      // Join the voice channel
+      const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: voiceChannel.guild.id,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator
+      });
+
+      // Create an audio player
+      const player = createAudioPlayer();
+
+      // Get the audio stream using yt-dlp
       const stream = ytDlp.downloadAudio(youtubeUrl);
-      connection.play(stream);
+
+      // Create an audio resource
+      const resource = createAudioResource(stream);
+
+      // Play the resource in the audio player
+      player.play(resource);
+
+      // Subscribe the player to the voice connection
+      connection.subscribe(player);
 
       // Respond to the interaction
       await interaction.reply(`Now playing: ${trackDetails.name} by ${trackDetails.artist}`);
+
+      // Handle events for the audio player
+      player.on(AudioPlayerStatus.Idle, () => {
+        connection.destroy(); // Disconnect after the song finishes
+      });
+
     } catch (error) {
       console.error(error);
       await interaction.reply('Error playing the requested track.');
