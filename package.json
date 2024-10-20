@@ -15,12 +15,15 @@
     "axios": "^1.7.7",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "erela.js": "^2.4.0",
     "fluent-ffmpeg": "^2.1.2",
+    "lavacord": "^2.1.4-v4",
     "openai": "^4.38.2",
     "retext": "^9.0.0",
     "retext-indefinite-article": "^5.0.0",
     "retext-profanities": "^8.0.0",
     "retext-sentence-spacing": "^6.0.0",
+    "shoukaku": "^4.1.1",
     "soundcloud": "^3.3.2",
     "yt-dlp-exec": "^1.0.2"
   }
