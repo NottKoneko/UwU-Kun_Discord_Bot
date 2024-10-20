@@ -19,10 +19,10 @@ module.exports = {
     }
 
     try {
-      // 1. Join the Lavalink node
-      const player = interaction.client.manager.players.get(interaction.guild.id);
+      // Ensure the Lavalink player exists or create it if necessary
+      let player = interaction.client.manager.players.get(interaction.guild.id);
       if (!player) {
-        interaction.client.manager.create({
+        player = interaction.client.manager.create({
           guild: interaction.guild.id,
           voiceChannel: voiceChannel.id,
           textChannel: interaction.channel.id,
@@ -31,41 +31,36 @@ module.exports = {
       }
 
       // Connect the player to the voice channel
-      await interaction.client.manager.players.get(interaction.guild.id).connect();
+      if (!player.connected) await player.connect();
 
-      // 2. Search for the track using Lavalink's search function
+      // Search for the track using Lavalink's search function
       const searchResult = await interaction.client.manager.search(trackName, interaction.user);
 
       if (searchResult.loadType === 'NO_MATCHES') {
         return interaction.reply('No results found for the track.');
       }
 
-      // 3. Queue the track or play immediately
-      const track = searchResult.tracks[0]; // Get the first result
-      const currentPlayer = interaction.client.manager.players.get(interaction.guild.id);
+      // Queue the track or play immediately if no track is playing
+      const track = searchResult.tracks[0];
+      player.queue.add(track);
 
-      currentPlayer.queue.add(track);
-
-      if (!currentPlayer.playing && !currentPlayer.paused && !currentPlayer.queue.size) {
-        currentPlayer.play(); // Play immediately if no other track is playing
+      if (!player.playing && !player.paused && !player.queue.size) {
+        player.play(); // Play immediately if no other track is playing
       }
 
-      // Respond to the interaction
       await interaction.reply(`Now playing: ${track.title}`);
 
-      // 4. Handle player events (optional)
-      currentPlayer.on('end', (data) => {
-        if (data.reason === 'REPLACED') return; // Track was replaced
-        if (data.reason === 'STOPPED') return;  // Playback was manually stopped
-        if (currentPlayer.queue.size) {
-          currentPlayer.play(); // Play the next track in the queue
+      // Handle player events
+      player.on(AudioPlayerStatus.Idle, () => {
+        if (player.queue.size) {
+          player.play(); // Play the next track in the queue
         } else {
-          currentPlayer.destroy(); // No more tracks, destroy the player
+          player.destroy(); // Destroy the player if no more tracks are left
         }
       });
     } catch (error) {
       console.error(error);
       await interaction.reply('There was an error playing the song.');
     }
-  }
+  },
 };

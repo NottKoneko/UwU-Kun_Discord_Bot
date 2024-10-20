@@ -51,9 +51,24 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
+client.manager = new Manager({
+  nodes: [
+    {
+      host: process.env.LAVALINK_HOST, // Lavalink host from environment variables
+      port: process.env.LAVALINK_PORT, // Lavalink port
+      password: process.env.LAVALINK_PASSWORD, // Lavalink password
+    },
+  ],
+  send(id, payload) {
+    const guild = client.guilds.cache.get(id);
+    if (guild) guild.shard.send(payload);
+  },
+});
+
+
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
-  
+    client.manager.init(client.user.id);
     try {
       // Loop through each guild the bot is part of
       for (const guild of client.guilds.cache.values()) {
