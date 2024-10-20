@@ -1,62 +1,71 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
-const SoundCloudAPI = require('../services/SoundCloudAPI'); // Using the SoundCloud API instead of YouTube
+const { createAudioPlayer, AudioPlayerStatus } = require('@discordjs/voice');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('play')
-    .setDescription('Play a song from SoundCloud in your voice channel.')
+    .setDescription('Play a song in your voice channel using Lavalink.')
     .addStringOption(option =>
       option.setName('track_name')
-      .setDescription('The name of the song you want to play from SoundCloud')
+      .setDescription('The name or URL of the song you want to play')
       .setRequired(true)),
 
   async execute(interaction) {
     const trackName = interaction.options.getString('track_name');
+    const voiceChannel = interaction.member.voice.channel;
+
+    if (!voiceChannel) {
+      return interaction.reply('You need to be in a voice channel to play music!');
+    }
 
     try {
-      // 1. Search for the track on SoundCloud
-      const soundCloudUrl = await SoundCloudAPI.searchOnSoundCloud(trackName);
-
-      // 2. Join voice channel and play audio
-      const voiceChannel = interaction.member.voice.channel;
-      if (!voiceChannel) {
-        return interaction.reply('You need to be in a voice channel to play music!');
+      // 1. Join the Lavalink node
+      const player = interaction.client.manager.players.get(interaction.guild.id);
+      if (!player) {
+        interaction.client.manager.create({
+          guild: interaction.guild.id,
+          voiceChannel: voiceChannel.id,
+          textChannel: interaction.channel.id,
+          selfDeaf: true,
+        });
       }
 
-      // Join the voice channel
-      const connection = joinVoiceChannel({
-        channelId: voiceChannel.id,
-        guildId: voiceChannel.guild.id,
-        adapterCreator: voiceChannel.guild.voiceAdapterCreator
-      });
+      // Connect the player to the voice channel
+      await interaction.client.manager.players.get(interaction.guild.id).connect();
 
-      // Create an audio player
-      const player = createAudioPlayer();
+      // 2. Search for the track using Lavalink's search function
+      const searchResult = await interaction.client.manager.search(trackName, interaction.user);
 
-      // Get the audio stream from SoundCloud
-      const stream = SoundCloudAPI.streamAudioFromSoundCloud(soundCloudUrl);
+      if (searchResult.loadType === 'NO_MATCHES') {
+        return interaction.reply('No results found for the track.');
+      }
 
-      // Create an audio resource
-      const resource = createAudioResource(stream);
+      // 3. Queue the track or play immediately
+      const track = searchResult.tracks[0]; // Get the first result
+      const currentPlayer = interaction.client.manager.players.get(interaction.guild.id);
 
-      // Play the resource in the audio player
-      player.play(resource);
+      currentPlayer.queue.add(track);
 
-      // Subscribe the player to the voice connection
-      connection.subscribe(player);
+      if (!currentPlayer.playing && !currentPlayer.paused && !currentPlayer.queue.size) {
+        currentPlayer.play(); // Play immediately if no other track is playing
+      }
 
       // Respond to the interaction
-      await interaction.reply(`Now playing: ${trackName} from SoundCloud`);
+      await interaction.reply(`Now playing: ${track.title}`);
 
-      // Handle events for the audio player
-      player.on(AudioPlayerStatus.Idle, () => {
-        connection.destroy(); // Disconnect after the song finishes
+      // 4. Handle player events (optional)
+      currentPlayer.on('end', (data) => {
+        if (data.reason === 'REPLACED') return; // Track was replaced
+        if (data.reason === 'STOPPED') return;  // Playback was manually stopped
+        if (currentPlayer.queue.size) {
+          currentPlayer.play(); // Play the next track in the queue
+        } else {
+          currentPlayer.destroy(); // No more tracks, destroy the player
+        }
       });
-
     } catch (error) {
       console.error(error);
-      await interaction.reply('Error playing the requested track.');
+      await interaction.reply('There was an error playing the song.');
     }
   }
 };
