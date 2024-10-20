@@ -5,7 +5,7 @@ const path = require('path');
 function downloadAudio(youtubeUrl) {
   return ytdl(youtubeUrl, {
     format: 'bestaudio',
-    cookies: path.resolve(__dirname, 'cookies.txt')  // Add path to cookies file
+    cookies: path.resolve(__dirname, './services/cookies.txt')  // Add path to cookies file
   });
 }
 
