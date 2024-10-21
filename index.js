@@ -53,29 +53,53 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
-client.manager = new MoonlinkManager({
-  nodes: [
-    {
-      host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com', // Lavalink host
-      port: 2333,
-      password: process.env.LAVALINK_PASSWORD || 'your-password', // Lavalink password
-      secure: false, // Set to true if you're using SSL
-    },
-  ],
-  shards: 1, // Adjust if you’re using multiple shards
-  clientId: client.user.id, // Your bot's client ID
-});
 
-client.manager.on('nodeConnect', (node) => {
-  console.log(`Lavalink node ${node.options.identifier} connected.`);
-});
-
-client.manager.on('nodeError', (node, error) => {
-  console.error(`Error with Lavalink node ${node.options.identifier}: ${error.message}`);
-});
 
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
+
+
+    // Initialize Moonlink.js manager after the bot is ready
+    try {
+      client.moonlink = new MoonlinkManager({
+          nodes: [
+              {
+                  identifier: "Main",
+                  host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com',
+                  port: 2333,
+                  password: process.env.LAVALINK_PASSWORD || 'your-password',
+                  secure: false,
+              },
+          ],
+          clientId: client.user.id,  // Initialize with the bot's client ID after it's ready
+          sendPayload: (guildId, payload) => {
+              const guild = client.guilds.cache.get(guildId);
+              if (guild) guild.shard.send(payload);
+          }
+      });
+
+      console.log("Moonlink Manager initialized successfully!");
+
+      // Handle Moonlink.js events
+      client.moonlink.on("nodeCreate", node => {
+          console.log(`${node.host} was connected`);
+      });
+
+      client.moonlink.on("trackStart", async (player, track) => {
+          const channel = client.channels.cache.get(player.textChannelId);
+          if (channel) channel.send(`Now playing: ${track.title}`);
+      });
+
+      client.moonlink.on("trackEnd", async (player, track) => {
+          const channel = client.channels.cache.get(player.textChannelId);
+          if (channel) channel.send(`Track ended: ${track.title}`);
+      });
+      
+  } catch (error) {
+      console.error("Failed to initialize Moonlink Manager:", error);
+  }
+
+  
     client.manager.init(client.user.id);
     try {
       // Loop through each guild the bot is part of
