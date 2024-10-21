@@ -53,30 +53,35 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
-client.manager = new MoonlinkManager({
-  nodes: [
-    {
-      host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com', // Lavalink host
-      port: 2333,
-      password: process.env.LAVALINK_PASSWORD || 'your-password', // Lavalink password
-      secure: false, // Set to true if you're using SSL
-    },
-  ],
-  shards: 1, // Adjust if you’re using multiple shards
-  clientId: client.user.id, // Your bot's client ID
-});
 
-client.manager.on('nodeConnect', (node) => {
-  console.log(`Lavalink node ${node.options.identifier} connected.`);
-});
-
-client.manager.on('nodeError', (node, error) => {
-  console.error(`Error with Lavalink node ${node.options.identifier}: ${error.message}`);
-});
 
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
+
+    client.manager = new MoonlinkManager({
+      nodes: [
+        {
+          host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com', // Lavalink host
+          port: 2333,
+          password: process.env.LAVALINK_PASSWORD || 'your-password', // Lavalink password
+          secure: false, // Set to true if you're using SSL
+        },
+      ],
+      shards: 1, // Adjust if you’re using multiple shards
+      clientId: client.user.id, // Your bot's client ID
+    });
+    
+    client.manager.on('nodeConnect', (node) => {
+      console.log(`Lavalink node ${node.options.identifier} connected.`);
+    });
+    
+    client.manager.on('nodeError', (node, error) => {
+      console.error(`Error with Lavalink node ${node.options.identifier}: ${error.message}`);
+    });
+
     client.manager.init(client.user.id);
+
+    
     try {
       // Loop through each guild the bot is part of
       for (const guild of client.guilds.cache.values()) {
