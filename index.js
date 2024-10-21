@@ -26,7 +26,7 @@ const {
   GatewayIntentBits,
   AuditLogEvents,
   Events,
-  GatewayIntentBits,
+  ChannelType,
 } = require('discord.js');
 
 // Initialize the OpenAI API
