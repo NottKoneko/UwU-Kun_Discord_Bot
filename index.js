@@ -68,6 +68,15 @@ client.manager = new Manager({
   },
 });
 
+// Event listener to log node connections
+client.manager.on('nodeConnect', node => {
+  console.log(`Lavalink node "${node.options.host}" connected.`);
+});
+
+// Event listener to log node errors
+client.manager.on('nodeError', (node, error) => {
+  console.error(`Lavalink node "${node.options.host}" encountered an error: ${error.message}`);
+});
 
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
