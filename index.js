@@ -54,45 +54,46 @@ loadCommands(client);
 client.once('ready', async () => {
     console.log(`${client.user.tag} is online and ready!`);
 
-    // Initialize Moonlink.js manager after the bot is ready
+
     try {
-        client.moonlink = new MoonlinkManager({
-            nodes: [
-                {
-                    identifier: "Main",
-                    host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com',
-                    port: 2333,
-                    password: process.env.LAVALINK_PASSWORD || 'your-password',
-                    secure: false,
-                },
-            ],
-            clientId: client.user.id,  // Initialize with the bot's client ID
-            sendPayload: (guildId, payload) => {
-                const guild = client.guilds.cache.get(guildId);
-                if (guild) guild.shard.send(payload);
-            }
-        });
+      // Initialize Moonlink.js manager after the bot is ready
+      client.moonlink = new MoonlinkManager({
+          nodes: [
+              {
+                  identifier: "Main",
+                  host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com',
+                  port: 2333,
+                  password: process.env.LAVALINK_PASSWORD || 'your-password',
+                  secure: false,
+              },
+          ],
+          clientId: client.user.id,  // Initialize with the bot's client ID
+          sendPayload: (guildId, payload) => {
+              const guild = client.guilds.cache.get(guildId);
+              if (guild) guild.shard.send(payload);
+          }
+      });
 
-        console.log("Moonlink Manager initialized successfully!");
+      console.log("Moonlink Manager initialized successfully!");
 
-        // Handle Moonlink.js events
-        client.moonlink.on("nodeCreate", node => {
-            console.log(`${node.host} was connected`);
-        });
+      // Handle Moonlink.js events
+      client.moonlink.on("nodeCreate", node => {
+          console.log(`${node.host} was connected`);
+      });
 
-        client.moonlink.on("trackStart", async (player, track) => {
-            const channel = client.channels.cache.get(player.textChannelId);
-            if (channel) channel.send(`Now playing: ${track.title}`);
-        });
+      client.moonlink.on("trackStart", async (player, track) => {
+          const channel = client.channels.cache.get(player.textChannelId);
+          if (channel) channel.send(`Now playing: ${track.title}`);
+      });
 
-        client.moonlink.on("trackEnd", async (player, track) => {
-            const channel = client.channels.cache.get(player.textChannelId);
-            if (channel) channel.send(`Track ended: ${track.title}`);
-        });
-        
-    } catch (error) {
-        console.error("Failed to initialize Moonlink Manager:", error);
-    }
+      client.moonlink.on("trackEnd", async (player, track) => {
+          const channel = client.channels.cache.get(player.textChannelId);
+          if (channel) channel.send(`Track ended: ${track.title}`);
+      });
+      
+  } catch (error) {
+      console.error("Failed to initialize Moonlink Manager:", error);
+  }
 
     // Additional startup processes (e.g., guild settings, member roles)
     try {
@@ -171,6 +172,16 @@ client.on('guildMemberAdd', async (member) => {
     }
 });
 
+// Event: Handling raw WebSocket events for Moonlink.js
+client.on("raw", (data) => {
+  // Ensure Moonlink is initialized before handling raw events
+  if (client.moonlink && typeof client.moonlink.packetUpdate === 'function') {
+      client.moonlink.packetUpdate(data); // Forward raw data to Moonlink.js
+  } else {
+      console.warn("Moonlink is not initialized, unable to handle raw event.");
+  }
+});
+
 // Event: Handle interactions (slash commands)
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
@@ -186,10 +197,3 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
-// Event: Handling raw WebSocket events for Moonlink.js
-client.on("raw", (data) => {
-    client.moonlink.packetUpdate(data); // Forward raw data to Moonlink.js
-});
-
-// Log into Discord with your bot token
-client.login(process.env.TOKEN);
