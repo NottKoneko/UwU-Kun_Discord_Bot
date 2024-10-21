@@ -18,6 +18,7 @@
     "erela.js": "^2.4.0",
     "fluent-ffmpeg": "^2.1.2",
     "lavacord": "^2.1.4-v4",
+    "moonlink.js": "^4.0.2",
     "openai": "^4.38.2",
     "retext": "^9.0.0",
     "retext-indefinite-article": "^5.0.0",

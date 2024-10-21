@@ -7,6 +7,7 @@ const path = require('node:path');
 const { handleJoinDM } = require('./joinDm');
 const { Manager } = require('erela.js');
 const { OpenAI } = require('openai');
+const { MoonlinkManager } = require('moonlink.js');
 const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
 const { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData } = require('./DataBaseInit'); 
@@ -52,31 +53,25 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
-client.manager = new Manager({
+client.manager = new MoonlinkManager({
   nodes: [
     {
-      host: 'lavalink-on-render-x11q.onrender.com', // Lavalink host from environment variables
-      port: 2333, // Lavalink port
-      password: process.env.LAVALINK_PASSWORD, // Lavalink password
-      retryAmount: 5, // Retry 5 times
-      retryDelay: 5000, // Retry every 5 seconds
+      host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com', // Lavalink host
+      port: 2333,
+      password: process.env.LAVALINK_PASSWORD || 'your-password', // Lavalink password
+      secure: false, // Set to true if you're using SSL
     },
   ],
-  send(id, payload) {
-    const guild = client.guilds.cache.get(id);
-    if (guild) client.ws.send(payload);
-  },
-  
+  shards: 1, // Adjust if you’re using multiple shards
+  clientId: client.user.id, // Your bot's client ID
 });
 
-// Event listener to log node connections
-client.manager.on('nodeConnect', node => {
-  console.log(`Lavalink node "${node.options.host}" connected.`);
+client.manager.on('nodeConnect', (node) => {
+  console.log(`Lavalink node ${node.options.identifier} connected.`);
 });
 
-// Event listener to log node errors
 client.manager.on('nodeError', (node, error) => {
-  console.error(`Lavalink node "${node.options.host}" encountered an error: ${error.message}`);
+  console.error(`Error with Lavalink node ${node.options.identifier}: ${error.message}`);
 });
 
 client.once('ready', async () => {
