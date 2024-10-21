@@ -55,7 +55,7 @@ loadCommands(client);
 client.manager = new Manager({
   nodes: [
     {
-      host: '//lavalink-on-render-x11q.onrender.com', // Lavalink host from environment variables
+      host: 'lavalink-on-render-x11q.onrender.com', // Lavalink host from environment variables
       port: 2333, // Lavalink port
       password: process.env.LAVALINK_PASSWORD, // Lavalink password
       retryAmount: 5, // Retry 5 times
@@ -64,8 +64,9 @@ client.manager = new Manager({
   ],
   send(id, payload) {
     const guild = client.guilds.cache.get(id);
-    if (guild) guild.shard.send(payload);
+    if (guild) client.ws.send(payload);
   },
+  
 });
 
 // Event listener to log node connections
