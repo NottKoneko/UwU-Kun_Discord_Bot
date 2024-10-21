@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { createAudioPlayer, AudioPlayerStatus } = require('@discordjs/voice');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,48 +18,52 @@ module.exports = {
     }
 
     try {
-      // Ensure the Lavalink player exists or create it if necessary
+      // Create or get the existing player
       let player = interaction.client.manager.players.get(interaction.guild.id);
       if (!player) {
         player = interaction.client.manager.create({
           guild: interaction.guild.id,
           voiceChannel: voiceChannel.id,
           textChannel: interaction.channel.id,
-          selfDeaf: true,
+          selfDeafen: true,
         });
       }
 
-      // Connect the player to the voice channel
-      if (!player.connected) await player.connect();
+      // Connect to the voice channel if not connected
+      if (player.state !== 'CONNECTED') player.connect();
 
-      // Search for the track using Lavalink's search function
-      const searchResult = await interaction.client.manager.search(trackName, interaction.user);
+      // Search for the track
+      const res = await interaction.client.manager.search(trackName, interaction.user);
 
-      if (searchResult.loadType === 'NO_MATCHES') {
-        return interaction.reply('No results found for the track.');
+      if (res.loadType === 'NO_MATCHES' || res.loadType === 'LOAD_FAILED') {
+        return interaction.reply('No results found or an error occurred while searching.');
       }
 
-      // Queue the track or play immediately if no track is playing
-      const track = searchResult.tracks[0];
-      player.queue.add(track);
+      // Add track(s) to the queue
+      if (res.loadType === 'PLAYLIST_LOADED') {
+        player.queue.add(res.tracks);
+        interaction.reply(`Added playlist **${res.playlist.name}** with ${res.tracks.length} tracks to the queue.`);
+      } else {
+        player.queue.add(res.tracks[0]);
+        interaction.reply(`Added **${res.tracks[0].title}** to the queue.`);
+      }
 
+      // Start playing if not already
       if (!player.playing && !player.paused && !player.queue.size) {
-        player.play(); // Play immediately if no other track is playing
+        player.play();
       }
-
-      await interaction.reply(`Now playing: ${track.title}`);
 
       // Handle player events
-      player.on(AudioPlayerStatus.Idle, () => {
-        if (player.queue.size) {
-          player.play(); // Play the next track in the queue
+      player.on('end', () => {
+        if (player.queue.size > 0) {
+          player.play();
         } else {
-          player.destroy(); // Destroy the player if no more tracks are left
+          player.destroy();
         }
       });
     } catch (error) {
       console.error(error);
-      await interaction.reply('There was an error playing the song.');
+      interaction.reply('There was an error playing the song.');
     }
   },
 };
