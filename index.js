@@ -56,7 +56,7 @@ client.manager = new Manager({
   nodes: [
     {
       host: '//lavalink-on-render-x11q.onrender.com', // Lavalink host from environment variables
-      port: Number(process.env.LAVALINK_PORT), // Lavalink port
+      port: 2333), // Lavalink port
       password: process.env.LAVALINK_PASSWORD, // Lavalink password
       retryAmount: 5, // Retry 5 times
       retryDelay: 5000, // Retry every 5 seconds
