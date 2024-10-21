@@ -172,15 +172,7 @@ client.on('guildMemberAdd', async (member) => {
     }
 });
 
-// Event: Handling raw WebSocket events for Moonlink.js
-client.on("raw", (data) => {
-  // Ensure Moonlink is initialized before handling raw events
-  if (client.moonlink && typeof client.moonlink.packetUpdate === 'function') {
-      client.moonlink.packetUpdate(data); // Forward raw data to Moonlink.js
-  } else {
-      console.warn("Moonlink is not initialized, unable to handle raw event.");
-  }
-});
+
 
 // Event: Handle interactions (slash commands)
 client.on('interactionCreate', async (interaction) => {
@@ -197,3 +189,12 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
+// Event: Handling raw WebSocket events for Moonlink.js
+client.on("raw", (data) => {
+  // Ensure Moonlink is initialized before handling raw events
+  if (client.moonlink && typeof client.moonlink.packetUpdate === 'function') {
+      client.moonlink.packetUpdate(data); // Forward raw data to Moonlink.js
+  } else {
+      console.warn("Moonlink is not initialized, unable to handle raw event.");
+  }
+});
