@@ -36,9 +36,11 @@ module.exports = {
 
             // Connect the player to the voice channel if it's not connected
             if (!player.connected) {
+                console.log('Player is not connected, attempting to connect...');
                 await player.connect({
                     setDeaf: true,  // Deafen the bot to avoid echo
                 });
+                console.log('Player connected to the voice channel.');
             }
 
             // Search for the track using Moonlink.js
@@ -50,10 +52,12 @@ module.exports = {
 
             // Handle search results
             if (res.loadType === 'loadfailed') {
+                console.error('Failed to load the requested track:', trackName);
                 return interaction.editReply({
                     content: 'Error: Failed to load the requested track.',
                 });
             } else if (res.loadType === 'empty') {
+                console.error('No results found for the query:', trackName);
                 return interaction.editReply({
                     content: 'Error: No results found for your query.',
                 });
@@ -62,12 +66,14 @@ module.exports = {
             // Handle if a playlist is returned
             if (res.loadType === 'playlist') {
                 res.tracks.forEach(track => player.queue.add(track)); // Add all tracks from the playlist to the queue
+                console.log(`Playlist ${res.playlistInfo.name} added with ${res.tracks.length} tracks.`);
                 await interaction.editReply({
                     content: `Playlist **${res.playlistInfo.name}** has been added to the queue with **${res.tracks.length}** tracks.`,
                 });
             } else {
                 // Add a single track to the queue
                 player.queue.add(res.tracks[0]);
+                console.log(`Track added to queue: ${res.tracks[0].title}`);
                 await interaction.editReply({
                     content: `Track **${res.tracks[0].title}** has been added to the queue.`,
                 });
@@ -75,7 +81,10 @@ module.exports = {
 
             // Start playing if the player is not already playing
             if (!player.playing) {
+                console.log('Player is not playing, starting the track...');
                 player.play();
+            } else {
+                console.log('Player is already playing.');
             }
 
         } catch (error) {
