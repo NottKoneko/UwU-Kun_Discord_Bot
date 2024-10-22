@@ -80,6 +80,8 @@ client.once('ready', async () => {
 
       console.log("Moonlink Manager initialized successfully!");
 
+      // No need to call `init` method for Moonlink, it's handled internally
+
       // Handle Moonlink.js events
       client.moonlink.on("nodeCreate", node => {
           console.log(`${node.host} was connected`);
@@ -98,6 +100,7 @@ client.once('ready', async () => {
   } catch (error) {
       console.error("Failed to initialize Moonlink Manager:", error);
   }
+
 
   
     client.manager.init(client.user.id);
