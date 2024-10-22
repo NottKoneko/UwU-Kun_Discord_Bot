@@ -220,105 +220,23 @@ client.on('guildMemberAdd', async (member) => {
     }
 });
 
-// Event: Handle interactions (slash commands)
+// Interaction handling (index.js)
 client.on('interactionCreate', async (interaction) => {
-  // Only process slash commands
   if (!interaction.isCommand()) return;
 
-  // Get the command being executed
   const command = client.commands.get(interaction.commandName);
-
-  // If command does not exist, return
   if (!command) return;
 
-  // Execute the command and handle errors
   try {
-      if (interaction.commandName === "play") {
-          if (!interaction.member.voice.channel) {
-              return interaction.reply({
-                  content: `Error: You must be in a voice channel to execute this command.`,
-                  ephemeral: true
-              });
-          }
-
-          const query = interaction.options.getString("track_name");
-          if (!query) {
-              return interaction.reply({
-                  content: `Error: You must provide a query to search for.`,
-                  ephemeral: true
-              });
-          }
-          
-
-          // Check if the node is connected
-          const node = client.moonlink.getNode("Main"); // Get the node by its identifier
-          if (!node || !node.connected) {
-              return interaction.reply({ 
-                  content: 'Error: No connected nodes available.', 
-                  ephemeral: true 
-              });
-          }
-
-
-          if (!player.connected) {
-              player.connect({
-                  setDeaf: true, // Deafens the bot upon joining
-                  setMute: false // Ensures the bot isn't muted
-              });
-          }
-
-          // Search for the track
-          const res = await client.moonlink.search({
-              query,
-              source: "youtube",
-              requester: interaction.user.id
-          });
-
-          if (res.loadType === "loadfailed") {
-              return interaction.reply({
-                  content: `Error: Failed to load the requested track.`,
-                  ephemeral: true
-              });
-          } else if (res.loadType === "empty") {
-              return interaction.reply({
-                  content: `Error: No results found for the query.`,
-                  ephemeral: true
-              });
-          }
-
-          // Add tracks or playlists to the queue
-          if (res.loadType === "playlist") {
-              interaction.reply({
-                  content: `Playlist ${res.playlistInfo.name} has been added to the queue.`
-              });
-
-              for (const track of res.tracks) {
-                  player.queue.add(track); // Add all tracks from the playlist to the queue
-              }
-          } else {
-              player.queue.add(res.tracks[0]); // Add the first track from the search results
-              interaction.reply({
-                  content: `Track added to the queue: ${res.tracks[0].title}`
-              });
-          }
-
-          // Start playing if the player isn't already playing
-          if (!player.playing) {
-              player.play();
-          }
-      } else {
-          // If not the play command, execute other commands
-          await command.execute(interaction);
-      }
+      await command.execute(interaction); // Execute the command module logic
   } catch (error) {
       console.error(`Error executing command ${interaction.commandName}:`, error);
-      await interaction.reply({ 
-          content: 'There was an error executing this command!', 
-          ephemeral: true 
+      await interaction.reply({
+          content: 'There was an error executing this command!',
+          ephemeral: true
       });
   }
 });
-
 
 // Event: Bot joins a new guild
 client.on('guildCreate', async (guild) => {
