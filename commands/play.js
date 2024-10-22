@@ -33,12 +33,7 @@ module.exports = {
                 textChannelId: interaction.channel.id,
                 autoPlay: true,
             });
-                // Continue with the rest of your code (e.g., connect player, search for tracks)
-            } else {
-                // If no node is connected, inform the user
-                return interaction.reply({ content: 'Error: No connected nodes available.', ephemeral: true });
-            }
-
+            
 
             // Connect the player to the voice channel if it's not connected
             if (!player.connected) {
