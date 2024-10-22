@@ -65,22 +65,19 @@ client.once('ready', async () => {
           nodes: [
               {
                   identifier: "Main",
-                  host: 'lavalink-v4.huntools-bot.xyz',  // Lavalink host without SSL
-                  port: 443,  // Port for non-SSL Lavalink instance
+                  host: 'lavalink.darrennathanael.com',  // Lavalink host
+                  port: 2333,  // Port for Lavalink
                   password: 'youshallnotpass',  // Lavalink password
-                  secure: true,  // Since you're using a non-SSL connection
+                  secure: false,  // Since you're using a non-SSL connection
               },
           ],
-          clientId: client.user.id,  // Set after bot is logged in
+          clientId: client.user.id,  // Set the client ID after bot is logged in
           send: (guildId, payload) => {
               const guild = client.guilds.cache.get(guildId);
               if (guild) guild.shard.send(payload);
           },
       });
 
-      console.log("Moonlink Manager initialized successfully!");
-
-      // Add event listeners for Moonlink
       client.moonlink.on("nodeCreate", node => {
           console.log(`Lavalink Node connected: ${node.host}:${node.port}`);
       });
@@ -101,6 +98,17 @@ client.once('ready', async () => {
       client.moonlink.on("trackEnd", async (player, track) => {
           const channel = client.channels.cache.get(player.textChannelId);
           if (channel) channel.send(`Track ended: ${track.title}`);
+      });
+
+      console.log("Moonlink Manager initialized successfully!");
+
+      // Only attach the raw event listener after Moonlink is initialized
+      client.on("raw", data => {
+          if (client.moonlink && client.moonlink.packetUpdate) {
+              client.moonlink.packetUpdate(data);  // Pass raw data to Moonlink.js for handling
+          } else {
+              console.warn("Moonlink is not initialized, cannot handle raw events.");
+          }
       });
 
   } catch (error) {
@@ -171,14 +179,6 @@ client.once('ready', async () => {
     await handleAuditLogLogging(client);
   });
   
-// Event: Handling raw WebSocket events
-client.on("raw", data => {
-  if (client.moonlink && client.moonlink.packetUpdate) {
-      client.moonlink.packetUpdate(data);  // Pass raw data to Moonlink.js for handling
-  } else {
-      console.warn("Moonlink is not initialized, cannot handle raw events.");
-  }
-});
 
 
 
