@@ -5,7 +5,6 @@ require('dotenv/config');
 const fs = require('node:fs');
 const path = require('node:path');
 const { handleJoinDM } = require('./joinDm');
-const { Manager } = require('erela.js');
 const { OpenAI } = require('openai');
 const { MoonlinkManager } = require('moonlink.js');
 const { handleMessageLogging } = require('./logger');
