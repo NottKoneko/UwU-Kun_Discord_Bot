@@ -241,13 +241,14 @@ client.on('interactionCreate', async (interaction) => {
               });
           }
 
-          const query = interaction.options.getString("query");
+          const query = interaction.options.getString("track_name");
           if (!query) {
               return interaction.reply({
                   content: `Error: You must provide a query to search for.`,
                   ephemeral: true
               });
           }
+          
 
           // Check if the node is connected
           const node = client.moonlink.getNode("Main"); // Get the node by its identifier
