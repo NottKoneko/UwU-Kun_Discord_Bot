@@ -258,13 +258,6 @@ client.on('interactionCreate', async (interaction) => {
               });
           }
 
-          // Create the player only if the node is connected
-          const player = client.moonlink.createPlayer({
-              guildId: interaction.guild.id,
-              voiceChannelId: interaction.member.voice.channel.id,
-              textChannelId: interaction.channel.id,
-              autoPlay: true
-          });
 
           if (!player.connected) {
               player.connect({
