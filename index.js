@@ -60,39 +60,37 @@ client.once('ready', async () => {
 
     // Initialize Moonlink.js manager after the bot is ready
     try {
-      client.moonlink = new Manager({
+        // Initialize Moonlink.js manager
+        client.moonlink = new Manager({
           nodes: [
               {
                   identifier: "Main",
-                  host : lavalink-legacy.jompo.cloud,
-                  port : 2333,
-                  password : "jompo",
-                  secure : false,
+                  host: 'lavalink-v4.huntools-bot.xyz',  // Lavalink host without SSL
+                  port: 443,  // Port for non-SSL Lavalink instance
+                  password: 'youshallnotpass',  // Lavalink password
+                  secure: true,  // Since you're using a non-SSL connection
               },
           ],
-          clientId: client.user.id,  // Initialize with the bot's client ID after it's ready
+          clientId: client.user.id,  // Set after bot is logged in
           send: (guildId, payload) => {
               const guild = client.guilds.cache.get(guildId);
-              if (guild) guild.shard.send(payload);  // Send payload to the correct shard
+              if (guild) guild.shard.send(payload);
           },
       });
-      client.moonlink.on("nodeError", (node, error) => {
-        console.error(`Lavalink Node encountered an error: ${error.message}`);
-    });
-    
-    client.moonlink.on("nodeDisconnected", (node, reason) => {
-        console.warn(`Lavalink Node ${node.identifier} disconnected. Reason: ${reason}`);
-    });
-    
-    client.moonlink.on("nodeCreate", node => {
-        console.log(`Lavalink Node connected: ${node.host}:${node.port}`);
-    });
-    
+
       console.log("Moonlink Manager initialized successfully!");
 
-      // Handle Moonlink.js events
+      // Add event listeners for Moonlink
       client.moonlink.on("nodeCreate", node => {
-          console.log(`${node.host} was connected`);
+          console.log(`Lavalink Node connected: ${node.host}:${node.port}`);
+      });
+
+      client.moonlink.on("nodeError", (node, error) => {
+          console.error(`Lavalink Node encountered an error: ${error.message}`);
+      });
+
+      client.moonlink.on("nodeDisconnected", (node, reason) => {
+          console.warn(`Lavalink Node ${node.identifier} disconnected. Reason: ${reason}`);
       });
 
       client.moonlink.on("trackStart", async (player, track) => {
@@ -108,7 +106,6 @@ client.once('ready', async () => {
   } catch (error) {
       console.error("Failed to initialize Moonlink Manager:", error);
   }
-
 
     try {
       // Loop through each guild the bot is part of
