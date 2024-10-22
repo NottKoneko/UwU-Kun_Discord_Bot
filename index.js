@@ -64,10 +64,10 @@ client.once('ready', async () => {
           nodes: [
               {
                   identifier: "Main",
-                  host: process.env.LAVALINK_HOST,
-                  port: 2333,
-                  password: process.env.LAVALINK_PASSWORD,
-                  secure: false,
+                  host : lavalink-legacy.jompo.cloud,
+                  port : 2333,
+                  password : "jompo",
+                  secure : false,
               },
           ],
           clientId: client.user.id,  // Initialize with the bot's client ID after it's ready
