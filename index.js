@@ -60,7 +60,7 @@ client.once('ready', async () => {
 
     // Initialize Moonlink.js manager after the bot is ready
     try {
-      client.moonlink = new Manager({
+      client.moonlink = new MoonlinkManager({
           nodes: [
               {
                   identifier: "Main",
@@ -71,7 +71,7 @@ client.once('ready', async () => {
               },
           ],
           clientId: client.user.id,  // Initialize with the bot's client ID after it's ready
-          sendPayload: (guildId, payload) => {
+          send: (guildId, payload) => {
               const guild = client.guilds.cache.get(guildId);
               if (guild) guild.shard.send(payload);  // Send payload to the correct shard
           },
@@ -98,7 +98,7 @@ client.once('ready', async () => {
       console.error("Failed to initialize Moonlink Manager:", error);
   }
 
-  
+
     client.manager.init(client.user.id);
     try {
       // Loop through each guild the bot is part of
