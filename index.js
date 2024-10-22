@@ -242,29 +242,29 @@ client.on('interactionCreate', async (interaction) => {
           }
 
           const query = interaction.options.getString("query");
+          if (!query) {
+              return interaction.reply({
+                  content: `Error: You must provide a query to search for.`,
+                  ephemeral: true
+              });
+          }
+
+          // Check if the node is connected
+          const node = client.moonlink.getNode("Main"); // Get the node by its identifier
+          if (!node || !node.connected) {
+              return interaction.reply({ 
+                  content: 'Error: No connected nodes available.', 
+                  ephemeral: true 
+              });
+          }
+
+          // Create the player only if the node is connected
           const player = client.moonlink.createPlayer({
               guildId: interaction.guild.id,
               voiceChannelId: interaction.member.voice.channel.id,
               textChannelId: interaction.channel.id,
               autoPlay: true
           });
-
-          const node = client.moonlink.getNode("Main"); // Get the node by its identifier
-          if (node && node.connected) {
-              // Create player only if the node is connected
-              const player = client.moonlink.createPlayer({
-                  guildId: interaction.guild.id,
-                  voiceChannelId: interaction.member.voice.channel.id,
-                  textChannelId: interaction.channel.id,
-                  autoPlay: true
-              });
-
-              // Continue with the rest of your code (e.g., connect player, search for tracks)
-          } else {
-              // If no node is connected, inform the user
-              return interaction.reply({ content: 'Error: No connected nodes available.', ephemeral: true });
-          }
-
 
           if (!player.connected) {
               player.connect({
@@ -273,6 +273,7 @@ client.on('interactionCreate', async (interaction) => {
               });
           }
 
+          // Search for the track
           const res = await client.moonlink.search({
               query,
               source: "youtube",
@@ -291,6 +292,7 @@ client.on('interactionCreate', async (interaction) => {
               });
           }
 
+          // Add tracks or playlists to the queue
           if (res.loadType === "playlist") {
               interaction.reply({
                   content: `Playlist ${res.playlistInfo.name} has been added to the queue.`
@@ -306,8 +308,9 @@ client.on('interactionCreate', async (interaction) => {
               });
           }
 
+          // Start playing if the player isn't already playing
           if (!player.playing) {
-              player.play(); // Start playing if not already doing so
+              player.play();
           }
       } else {
           // If not the play command, execute other commands
@@ -315,9 +318,13 @@ client.on('interactionCreate', async (interaction) => {
       }
   } catch (error) {
       console.error(`Error executing command ${interaction.commandName}:`, error);
-      await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+      await interaction.reply({ 
+          content: 'There was an error executing this command!', 
+          ephemeral: true 
+      });
   }
 });
+
 
 // Event: Bot joins a new guild
 client.on('guildCreate', async (guild) => {
