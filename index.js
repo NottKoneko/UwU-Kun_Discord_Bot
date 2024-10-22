@@ -65,7 +65,7 @@ client.once('ready', async () => {
           nodes: [
               {
                   identifier: "Main",
-                  host: lavalink-on-render-x11q,  // Lavalink host
+                  host: "lavalink-on-render-x11q",  // Lavalink host
                   port: 2333,  // Port for Lavalink
                   password: process.env.LAVALINK_PASSWORD,  // Lavalink password
                   secure: false,  // Since you're using a non-SSL connection
