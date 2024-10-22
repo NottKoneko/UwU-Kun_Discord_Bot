@@ -5,8 +5,8 @@ require('dotenv/config');
 const fs = require('node:fs');
 const path = require('node:path');
 const { handleJoinDM } = require('./joinDm');
+const { Manager } = require('moonlink.js');  // Corrected import from Moonlink.js
 const { OpenAI } = require('openai');
-const { MoonlinkManager } = require('moonlink.js');
 const { handleMessageLogging } = require('./logger');
 const { handleAuditLogLogging } = require('./auditLogger');
 const { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData } = require('./DataBaseInit'); 
