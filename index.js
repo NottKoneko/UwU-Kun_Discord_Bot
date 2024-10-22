@@ -74,8 +74,8 @@ client.once('ready', async () => {
           clientId: client.user.id,  // Initialize with the bot's client ID after it's ready
           sendPayload: (guildId, payload) => {
               const guild = client.guilds.cache.get(guildId);
-              if (guild) guild.shard.send(payload);
-          }
+              if (guild) guild.shard.send(payload);  // Send payload to the correct shard
+          },
       });
 
       console.log("Moonlink Manager initialized successfully!");
@@ -94,11 +94,10 @@ client.once('ready', async () => {
           const channel = client.channels.cache.get(player.textChannelId);
           if (channel) channel.send(`Track ended: ${track.title}`);
       });
-      
+
   } catch (error) {
       console.error("Failed to initialize Moonlink Manager:", error);
   }
-
 
   
     client.manager.init(client.user.id);
@@ -166,7 +165,14 @@ client.once('ready', async () => {
     await handleAuditLogLogging(client);
   });
   
-
+// Event: Handling raw WebSocket events
+client.on("raw", data => {
+  if (client.moonlink && client.moonlink.packetUpdate) {
+      client.moonlink.packetUpdate(data);  // Pass raw data to Moonlink.js for handling
+  } else {
+      console.warn("Moonlink is not initialized, cannot handle raw events.");
+  }
+});
 
 
 
@@ -219,6 +225,66 @@ client.on('interactionCreate', async (interaction) => {
     // If command does not exist, return
     if (!command) return;
 
+    
+    if (interaction.commandName === "play") {
+      if (!interaction.member.voice.channel) {
+          return interaction.reply({
+              content: `Error: You must be in a voice channel to execute this command.`,
+              ephemeral: true
+          });
+      }
+
+      const query = interaction.options.getString("query");
+      const player = client.moonlink.createPlayer({
+          guildId: interaction.guild.id,
+          voiceChannelId: interaction.member.voice.channel.id,
+          textChannelId: interaction.channel.id,
+          autoPlay: true
+      });
+
+      if (!player.connected) {
+          player.connect({
+              setDeaf: true, // Deafens the bot upon joining
+              setMute: false // Ensures the bot isn't muted
+          });
+      }
+
+      const res = await client.moonlink.search({
+          query,
+          source: "youtube",
+          requester: interaction.user.id
+      });
+
+      if (res.loadType === "loadfailed") {
+          return interaction.reply({
+              content: `Error: Failed to load the requested track.`,
+              ephemeral: true
+          });
+      } else if (res.loadType === "empty") {
+          return interaction.reply({
+              content: `Error: No results found for the query.`,
+              ephemeral: true
+          });
+      }
+
+      if (res.loadType === "playlist") {
+          interaction.reply({
+              content: `Playlist ${res.playlistInfo.name} has been added to the queue.`
+          });
+
+          for (const track of res.tracks) {
+              player.queue.add(track); // Add all tracks from the playlist to the queue
+          }
+      } else {
+          player.queue.add(res.tracks[0]); // Add the first track from the search results
+          interaction.reply({
+              content: `Track added to the queue: ${res.tracks[0].title}`
+          });
+        }}
+
+      if (!player.playing) {
+          player.play(); // Start playing if not already doing so
+      }
     // Execute the command and handle errors
     try {
         await command.execute(interaction);
