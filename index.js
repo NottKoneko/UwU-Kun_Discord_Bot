@@ -65,7 +65,7 @@ client.once('ready', async () => {
               {
                   identifier: "Main",
                   host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com',
-                  port: 2333,
+                  port: 443,
                   password: process.env.LAVALINK_PASSWORD || 'your-password',
                   secure: false,
               },
