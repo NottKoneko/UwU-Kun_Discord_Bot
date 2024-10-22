@@ -60,7 +60,7 @@ client.once('ready', async () => {
 
     // Initialize Moonlink.js manager after the bot is ready
     try {
-      client.moonlink = new MoonlinkManager({
+      client.moonlink = new Manager({
           nodes: [
               {
                   identifier: "Main",
