@@ -249,6 +249,23 @@ client.on('interactionCreate', async (interaction) => {
               autoPlay: true
           });
 
+          const node = client.moonlink.getNode("Main"); // Get the node by its identifier
+          if (node && node.connected) {
+              // Create player only if the node is connected
+              const player = client.moonlink.createPlayer({
+                  guildId: interaction.guild.id,
+                  voiceChannelId: interaction.member.voice.channel.id,
+                  textChannelId: interaction.channel.id,
+                  autoPlay: true
+              });
+
+              // Continue with the rest of your code (e.g., connect player, search for tracks)
+          } else {
+              // If no node is connected, inform the user
+              return interaction.reply({ content: 'Error: No connected nodes available.', ephemeral: true });
+          }
+
+
           if (!player.connected) {
               player.connect({
                   setDeaf: true, // Deafens the bot upon joining
