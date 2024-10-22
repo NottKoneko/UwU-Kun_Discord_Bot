@@ -99,7 +99,6 @@ client.once('ready', async () => {
   }
 
 
-    client.manager.init(client.user.id);
     try {
       // Loop through each guild the bot is part of
       for (const guild of client.guilds.cache.values()) {
