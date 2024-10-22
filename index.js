@@ -64,10 +64,10 @@ client.once('ready', async () => {
           nodes: [
               {
                   identifier: "Main",
-                  host: process.env.LAVALINK_HOST || 'lavalink-on-render-x11q.onrender.com',
-                  port: 443,
-                  password: process.env.LAVALINK_PASSWORD || 'your-password',
-                  secure: true,
+                  host: process.env.LAVALINK_HOST,
+                  port: 2333,
+                  password: process.env.LAVALINK_PASSWORD,
+                  secure: false,
               },
           ],
           clientId: client.user.id,  // Initialize with the bot's client ID after it's ready
