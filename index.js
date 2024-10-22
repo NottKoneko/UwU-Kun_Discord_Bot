@@ -61,7 +61,7 @@ client.once('ready', async () => {
 
     // Initialize Moonlink.js manager after the bot is ready
     try {
-      client.moonlink = new MoonlinkManager({
+      client.moonlink = new Manager({
           nodes: [
               {
                   identifier: "Main",
@@ -79,8 +79,6 @@ client.once('ready', async () => {
       });
 
       console.log("Moonlink Manager initialized successfully!");
-
-      // No need to call `init` method for Moonlink, it's handled internally
 
       // Handle Moonlink.js events
       client.moonlink.on("nodeCreate", node => {
