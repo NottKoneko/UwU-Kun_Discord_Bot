@@ -220,7 +220,7 @@ client.on('guildMemberAdd', async (member) => {
     }
 });
 
-// Interaction handling (index.js)
+// Interaction handling, call commands into index.js from command handler file
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isCommand()) return;
 
@@ -250,8 +250,6 @@ client.on('guildCreate', async (guild) => {
 
     // Log or process the admin roles
     console.log('Admin Roles:', adminRoles);
-
-    // Perform actions like notifying the admins or logging admin roles
 });
 
 
