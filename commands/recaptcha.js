@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { updateRecaptchaStatus } = require('../supabase'); // import Supabase functions
+const { updateRecaptchaStatus } = require('@supabase/supabase-js'); // import Supabase functions
+const { createClient } = require('@supabase/supabase-js');
 
 module.exports = {
     data: new SlashCommandBuilder()
