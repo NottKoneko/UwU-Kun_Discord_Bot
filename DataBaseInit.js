@@ -112,7 +112,30 @@ async function getGuildData(guild, memberId) {
   }
 }
 
+async function updateRecaptchaStatus(guildId, status) {
+  const { error } = await supabase
+      .from('server_settings')
+      .upsert({ guild_id: guildId, recaptcha_enabled: status }, { onConflict: 'guild_id' });
 
+  if (error) {
+      console.error('Failed to update reCAPTCHA status in database:', error);
+      throw new Error('Database update failed');
+  }
+}
+
+async function getRecaptchaStatus(guildId) {
+  const { data, error } = await supabase
+      .from('server_settings')
+      .select('recaptcha_enabled')
+      .eq('guild_id', guildId)
+      .single();
+
+  if (error) {
+      console.error('Failed to fetch reCAPTCHA status:', error);
+      return false;
+  }
+  return data ? data.recaptcha_enabled : false;
+}
 /*
 // Example: Fetch guild data for a specific member in a guild
 (async () => {
@@ -127,4 +150,4 @@ async function getGuildData(guild, memberId) {
 */
 
 // Exporting the functions to use them in other parts of your bot
-module.exports = { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData };
+module.exports = { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData, updateRecaptchaStatus, getRecaptchaStatus };

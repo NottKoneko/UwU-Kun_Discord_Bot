@@ -187,6 +187,22 @@ client.once('ready', async () => {
 client.on('guildMemberAdd', async (member) => {
     // Handle sending a welcome DM to the new member
     await handleJoinDM(member);
+    
+    const guildId = member.guild.id;
+    const isRecaptchaEnabled = await getRecaptchaStatus(guildId);
+
+    if (isRecaptchaEnabled) {
+        try {
+            // Send reCAPTCHA link to member's DMs
+            await member.send("Welcome! Please complete this reCAPTCHA to verify: [reCAPTCHA Link]");
+            
+            // Listen for reCAPTCHA completion and grant role upon success
+            // (You'll need a way to confirm completion, e.g., a webhook to your bot or server)
+
+        } catch (error) {
+            console.error('Failed to send reCAPTCHA:', error);
+        }
+    }
 
     // Fetch settings for each guild, assuming this returns the primary key of guild_settings
     const guildSettings = await getGuildSettings(guild.id);
