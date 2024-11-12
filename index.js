@@ -12,6 +12,8 @@ const { handleAuditLogLogging } = require('./auditLogger');
 const { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData } = require('./DataBaseInit'); 
 const { loadCommands } = require('./commandHandler');
 const { createClient } = require('@supabase/supabase-js');
+const { fetchLatestPost } = require('./reddit/buildapcsales');
+const { getChannelId_buildapc } = require('./DataBaseInit');
 
 // Initialize Supabase client
 const supabaseUrl = process.env.DB_URL;
@@ -52,7 +54,8 @@ client.commands = new Collection();
 // Load all commands from the commands folder
 loadCommands(client);
 
-
+let lastPostId = null;
+const POLLING_INTERVAL = 60000; // 60 seconds
 
 client.once('ready', async () => {
     console.log('Bot is online and ready!');
@@ -177,9 +180,34 @@ client.once('ready', async () => {
   
     // Start logging audit logs after data has been fetched
     await handleAuditLogLogging(client);
-  });
+});
   
+async function checkForNewPosts(client) {
+  // Fetch the channel ID for `r/buildapcsales` dynamically for each guild
+  for (const guild of client.guilds.cache.values()) {
+    const channelId = await getChannelId_buildapc(guild.id);
 
+    if (!channelId) {
+      console.error(`Channel ID not found for guild: ${guild.name} (${guild.id})`);
+      continue;
+    }
+
+    setInterval(async () => {
+      const latestPost = await fetchLatestPost();
+
+      if (latestPost && latestPost.id !== lastPostId) {
+        lastPostId = latestPost.id;
+
+        // Fetch the Discord channel where the bot should post updates
+        const channel = await client.channels.fetch(channelId);
+        if (channel) {
+          const { title, url, author } = latestPost;
+          channel.send(`🛒 **New Post on r/buildapcsales**\n**Title**: ${title}\n**Author**: u/${author}\n🔗 ${url}`);
+        }
+      }
+    }, POLLING_INTERVAL);
+  }
+}
 
 
 
@@ -187,7 +215,7 @@ client.once('ready', async () => {
 client.on('guildMemberAdd', async (member) => {
     // Handle sending a welcome DM to the new member
     await handleJoinDM(member);
-    
+    /* 
     const guildId = member.guild.id;
     const isRecaptchaEnabled = await getRecaptchaStatus(guildId);
 
@@ -202,8 +230,9 @@ client.on('guildMemberAdd', async (member) => {
         } catch (error) {
             console.error('Failed to send reCAPTCHA:', error);
         }
-    }
-
+              
+}
+*/
     // Fetch settings for each guild, assuming this returns the primary key of guild_settings
     const guildSettings = await getGuildSettings(guild.id);
 
@@ -278,7 +307,7 @@ client.on('guildCreate', async (guild) => {
 // Event listener for when a message is received
 client.on('messageCreate', async (message) => {
     console.log(message.content);
-
+    await checkForNewPosts(client);
     // Handle logging and conversation processing
     await handleMessageLogging(client, message);
 

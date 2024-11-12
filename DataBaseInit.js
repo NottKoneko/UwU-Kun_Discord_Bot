@@ -136,6 +136,26 @@ async function getRecaptchaStatus(guildId) {
   }
   return data ? data.recaptcha_enabled : false;
 }
+
+async function getChannelId_buildapc(guildId) {
+  try {
+    const { data, error } = await supabase
+      .from('guild_settings')
+      .select('r/buildapcsales_CHANNEL_ID')
+      .eq('guild_id', guildId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching channel ID:', error);
+      return null;
+    }
+
+    return data ? data['r/buildapcsales_CHANNEL_ID'] : null;
+  } catch (err) {
+    console.error('Error interacting with Supabase:', err);
+    return null;
+  }
+}
 /*
 // Example: Fetch guild data for a specific member in a guild
 (async () => {
