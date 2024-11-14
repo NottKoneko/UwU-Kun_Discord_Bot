@@ -170,4 +170,4 @@ async function getChannelId_buildapc(guildId) {
 */
 
 // Exporting the functions to use them in other parts of your bot
-module.exports = { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData, updateRecaptchaStatus, getRecaptchaStatus };
+module.exports = { getGuildSettings, getMemberRoles, getAdminRoles, getGuildData, updateRecaptchaStatus, getRecaptchaStatus, getChannelId_buildapc };
